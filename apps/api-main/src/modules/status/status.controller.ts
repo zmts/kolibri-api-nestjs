@@ -2,8 +2,8 @@ import { Controller, Get } from '@nestjs/common';
 
 import { ApiResponse } from '@libs/core';
 
-import { StatusService } from './status.service.js';
-import type { StatusInfo } from './types/status-info.type.js';
+import { StatusService } from './status.service';
+import type { StatusInfo } from './types/status-info.type';
 
 @Controller('status')
 export class StatusController {

@@ -5,7 +5,7 @@ import { CommonModule } from '@libs/common';
 import { appConfig } from '@libs/config';
 import { GlobalExceptionProvider } from '@libs/core';
 
-import { StatusModule } from './modules/status/status.module.js';
+import { StatusModule } from './modules/status/status.module';
 
 @Module({
   imports: [

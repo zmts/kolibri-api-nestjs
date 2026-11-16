@@ -1,11 +1,11 @@
 import { ConfigService } from '@nestjs/config';
-import packageJson from '@package-json' with { type: 'json' };
+import packageJson from '@package-json';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AppEnv } from '@libs/config';
 import type { AllConfig } from '@libs/config';
 
-import { StatusService } from '../status.service.js';
+import { StatusService } from '../status.service';
 
 describe('StatusService', () => {
   let config: AllConfig;

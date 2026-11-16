@@ -6,8 +6,8 @@
   "monorepo": true,
   "compilerOptions": {
     "deleteOutDir": true,
-    "webpack": false,
-    "tsConfigPath": "apps/api-main/tsconfig.app.json"
+    "tsConfigPath": "apps/api-main/tsconfig.app.json",
+    "builder": "rspack"
   },
   "projects": {
     "api-main": {

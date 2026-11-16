@@ -1,1 +1,1 @@
-export { CommonModule } from './common.module.js';
+export { CommonModule } from './common.module';

@@ -4,8 +4,8 @@ import type { Response } from 'express';
 import { map } from 'rxjs';
 import type { Observable } from 'rxjs';
 
-import { ApiResponse } from './api-response.js';
-import type { IPaginationResponse } from './types.js';
+import { ApiResponse } from './api-response';
+import type { IPaginationResponse } from './types';
 
 interface IApiResponse {
   status: number;

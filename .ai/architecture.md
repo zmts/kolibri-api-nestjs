@@ -205,22 +205,35 @@ authentication or server-side authorization.
 
 ## ESM, Imports, and Build Contracts
 
-- Preserve `type: module`, `NodeNext` module resolution, decorator metadata, and
-  strict TypeScript checking.
-- Relative TypeScript source imports use the emitted `.js` extension.
+- Preserve `type: module`, `module: ESNext`, `moduleResolution: Bundler`,
+  decorator metadata, and strict TypeScript checking.
+- Relative TypeScript source imports and re-exports omit file extensions.
+  Rspack resolves these imports and produces ESM bundles for Node.js. Changing
+  TypeScript module resolution alone does not make extensionless imports work
+  in unbundled Node.js ESM output.
+- Nest CLI uses `builder: rspack` for the application and libraries. Its native
+  SWC loader preserves Nest decorator metadata, while
+  `fork-ts-checker-webpack-plugin` checks types during build and watch mode.
 - Use `import type` for type-only dependencies. Nest-injected constructor tokens
   must remain available at runtime.
 - Use the configured `@libs/common`, `@libs/config`, and `@libs/core` aliases and
   their explicit public exports. Internal library files use direct local imports.
-- `@package-json` points to the root `package.json`. JSON value imports use
-  `with { type: 'json' }`; application compilation enables `resolveJsonModule`.
-- Nest CLI rewrites aliases during compilation. Vitest resolves the same paths
-  through Vite's `resolve.tsconfigPaths`; do not duplicate alias definitions in
-  the test configuration. TypeScript paths alone do not make aliases resolvable
-  by Node.js.
-- Use the existing Nest CLI build and start scripts. Preserve each project's
-  output directory and the production entry point configured in `package.json`.
-  Verify compilation and runtime together when changing aliases or output paths.
+- `@package-json` points to the root `package.json`. Application compilation
+  enables `resolveJsonModule`. Rspack bundles the JSON value, so source imports
+  do not need runtime JSON import attributes.
+- Rspack resolves aliases from TypeScript configuration. Vitest resolves the same
+  paths through Vite's `resolve.tsconfigPaths`; do not duplicate alias definitions
+  in the test configuration.
+- Run the application with the existing Nest CLI start scripts or
+  `npm run start:prod`. The application bundle is `dist/apps/api-main/main.js`;
+  library bundles are `dist/libs/<library>/index.js`. Third-party packages remain
+  external dependencies and must be installed at runtime.
+- Library builds produce workspace bundles, not standalone npm packages or
+  declaration distributions. Keep libraries as workspace source dependencies;
+  a separately published library would require its own packaging contract.
+- Verify compilation, watch mode, and runtime together when changing aliases,
+  builders, or output paths. Do not switch production back to plain `tsc` emit
+  while retaining extensionless ESM imports.
 
 ## Testing
 
@@ -293,16 +306,17 @@ their combined registration and behavior.
 
 Run `npm test` from the workspace root. It first checks application, library,
 and test types using `tsconfig.test.json` without emitting files, then runs
-Vitest once. The test configuration preserves the production ESM module setup.
+Vitest once. Both the application and test configuration use ESM. Vitest
+transforms test modules through Vite independently of the Rspack production build.
 
 The root `vitest.config.ts` discovers `*.spec.ts` files inside `__tests__`
 directories under both `apps/` and `libs/`. Tests use the Node environment and
 explicit imports from `vitest`; test globals are not added to production types.
 `vitest.setup.ts` loads `reflect-metadata` before test modules execute.
 
-ESM and the aliases in `tsconfig.json`, including `@package-json`, are supported
-through Vite's native tsconfig path resolution. Production still builds through
-Nest CLI; a passing Vitest transform does not replace the production build.
+The aliases in `tsconfig.json`, including `@package-json`, use Vite's native
+tsconfig path resolution. Production still builds through Nest CLI; passing
+tests do not replace the production build.
 
 Restore mocks and real timers after using them. The shared configuration enables
 `restoreMocks`; tests that enable fake timers must restore real timers in their

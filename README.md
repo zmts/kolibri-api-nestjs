@@ -1,6 +1,6 @@
 # Kolibri API
 
-A minimal monorepo NestJS boilerplate using TypeScript and ESM.
+A minimal monorepo NestJS boilerplate using TypeScript and ESM, bundled with Rspack.
 
 ## Getting Started
 

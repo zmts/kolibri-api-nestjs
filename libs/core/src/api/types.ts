@@ -1,6 +1,6 @@
 import type { HttpStatus } from '@nestjs/common';
 
-import type { Cookie } from './cookie.js';
+import type { Cookie } from './cookie';
 
 export interface IResponseOptions {
   status?: HttpStatus;

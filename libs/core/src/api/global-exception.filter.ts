@@ -3,7 +3,7 @@ import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common';
 import { APP_FILTER, HttpAdapterHost } from '@nestjs/core';
 import type { Request } from 'express';
 
-import { ApiResponseError, AppError } from '../errors/index.js';
+import { ApiResponseError, AppError } from '../errors/index';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {

@@ -8,7 +8,7 @@ import { AppEnv } from '@libs/config';
 import type { AllConfig } from '@libs/config';
 import { ApiResponseInterceptor, validationExceptionFactory } from '@libs/core';
 
-import { AppModule } from './app.module.js';
+import { AppModule } from './app.module';
 
 const logger = new Logger('Bootstrap');
 

@@ -1,6 +1,6 @@
 import type { ValidationError } from 'class-validator';
 
-import { AppError, ErrorCode } from '../errors/index.js';
+import { AppError, ErrorCode } from '../errors/index';
 
 type ValidationErrors = { [property: string]: string[] | { constraints: string[]; children: ValidationErrors } };
 

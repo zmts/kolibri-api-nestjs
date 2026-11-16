@@ -18,7 +18,7 @@
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\" --no-error-on-unmatched-pattern \"vitest*.ts\"",
     "format:check": "prettier --check \"apps/**/*.ts\" \"apps/**/tsconfig*.json\" \"libs/**/*.ts\" \"libs/**/tsconfig*.json\" \"*.json\" eslint.config.mjs --no-error-on-unmatched-pattern \"vitest*.ts\"",
     "build:api-main": "nest build api-main",
-    "start:api-main": "node dist/apps/api-main/apps/api-main/src/main.js",
+    "start:api-main": "node dist/apps/api-main/main.js",
     "start:dev:api-main": "nest start api-main --watch",
     "build:common": "nest build common",
     "build:config": "nest build config",
@@ -38,6 +38,7 @@
   "devDependencies": {
     "@nestjs/cli": "12.0.13",
     "@nestjs/schematics": "12.0.13",
+    "@rspack/core": "2.3.2",
     "@types/express": "5.0.6",
     "@types/node": "24.19.2",
     "@typescript-eslint/eslint-plugin": "8.72.2",
@@ -47,10 +48,12 @@
     "eslint-plugin-import": "2.32.0",
     "eslint-plugin-prettier": "5.5.7",
     "eslint-plugin-unused-imports": "4.4.1",
+    "fork-ts-checker-webpack-plugin": "9.1.1",
     "globals": "17.14.0",
     "prettier": "3.10.1",
     "typescript": "6.0.3",
     "vite": "8.3.8",
-    "vitest": "5.1.0"
+    "vitest": "5.1.0",
+    "webpack-node-externals": "3.0.0"
   }
 }

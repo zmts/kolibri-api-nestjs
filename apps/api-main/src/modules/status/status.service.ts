@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import packageJson from '@package-json' with { type: 'json' };
+import packageJson from '@package-json';
 
 import type { AllConfig } from '@libs/config';
 
-import type { StatusInfo } from './types/status-info.type.js';
+import type { StatusInfo } from './types/status-info.type';
 
 @Injectable()
 export class StatusService {

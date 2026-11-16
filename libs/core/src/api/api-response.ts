@@ -1,6 +1,6 @@
 import type { HttpStatus } from '@nestjs/common';
 
-import type { IResponseOptions } from './types.js';
+import type { IResponseOptions } from './types';
 
 export class ApiResponse<T = unknown> {
   readonly data?: T;
