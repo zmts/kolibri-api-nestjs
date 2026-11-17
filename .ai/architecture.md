@@ -10,8 +10,11 @@ It uses one root `package.json` and `package-lock.json`. Dependencies have exact
 versions; `.npmrc` sets `save-exact=true` for future installations.
 
 Add functionality as focused Nest modules. Keep the solution proportional to
-the use case: the current scaffold does not require actions, repositories,
-resource classes, separate domain libraries, or additional infrastructure layers.
+current requirements; introduce additional layers only for a concrete need.
+
+This document defines structural responsibilities, dependency direction, shared
+infrastructure contracts, and development conventions. Describe feature behavior,
+endpoint-specific payloads, and operational settings outside this document.
 
 ## Layer Map
 
@@ -43,14 +46,14 @@ TypeScript configuration extending the root `tsconfig.json`.
 ## Placement and Dependency Direction
 
 - Application modules live in `apps/api-main/src/modules/<module>` and own their
-  routes, use cases, services, DTOs, and types.
+  routes, services, DTOs, and types.
 - `libs/config` owns environment access and typed configuration. It does not
-  depend on application modules or contain business logic.
+  depend on application modules or implement feature behavior.
 - `libs/core` owns reusable API infrastructure and application error conventions.
   It may depend on NestJS, Express types, and RxJS; it is not a framework-neutral
   domain layer.
-- `libs/common` is reserved for genuinely shared functionality. Its current
-  `CommonModule` is a scaffold; it is not a reason to move module-local code there.
+- `libs/common` is reserved for shared functionality with a demonstrated common
+  responsibility. Keep module-local code with its owner.
 - Applications may import libraries. Libraries must not import application code,
   including through type-only imports, aliases, relative paths, or re-exports.
 - Keep dependencies acyclic. Do not use `forwardRef()` as the default solution
@@ -93,8 +96,8 @@ types. Create additional DTO, helper, or service files only when they have a
 concrete responsibility; empty directory trees are not required.
 
 - Controllers connect HTTP parameters and validated DTOs to service operations,
-  then return the public response. They do not contain business algorithms.
-- Services own use-case behavior and dependencies. They should return data or
+  then return the public response. Keep operation implementations in services.
+- Services own application operations and dependencies. They should return data or
   explicit results rather than depend on Express request or response objects.
 - Keep module-owned interfaces and types in the module's `types/` directory,
   rather than declaring shared signatures inside a service implementation.
@@ -103,15 +106,9 @@ concrete responsibility; empty directory trees are not required.
 - Keep module-local helpers beside their owner. Add a shared library only for
   actual reuse; do not add a service that only forwards another service call.
 
-The existing `status` module follows this structure. `GET /api/status` reports
-the configured application name and environment, the root package version,
-process uptime in seconds, and the current UTC timestamp. It is an information
-endpoint, not a readiness check for external dependencies.
-
 ## HTTP Responses and Public Contracts
 
-Controllers return `ApiResponse<T>` directly. `Resource` and `ResourceList`
-are not part of this project's response model.
+Controllers return `ApiResponse<T>` directly.
 
 ```ts
 return new ApiResponse({ data: result });
@@ -150,7 +147,7 @@ and distinct from persistence or service implementation details.
 The global `ValidationPipe` uses `whitelist: true`,
 `forbidNonWhitelisted: true`, and `validationExceptionFactory`. Unknown DTO
 properties are rejected. Automatic DTO transformation is not enabled globally;
-do not assume request strings are converted to domain values automatically.
+do not assume request strings are converted to typed values automatically.
 
 Expected application failures use `AppError` and the basic `ErrorCode` entries
 defined in `libs/core/src/errors`. Validation failures use `VALIDATION_ERROR`
@@ -183,26 +180,16 @@ Keep raw environment reads in `libs/config`. Consumers use the typed
 configuration. Add new configuration fields to their owning factory and types,
 and keep `.env.example` synchronized without adding secrets.
 
-The application configuration currently uses:
-
-| Variable       | Meaning                                                            |
-| -------------- | ------------------------------------------------------------------ |
-| `APP_NAME`     | Application name; defaults to `api`                                |
-| `NODE_ENV`     | `development`, `stage`, or `production`; defaults to `development` |
-| `APP_PORT`     | Preferred HTTP port                                                |
-| `PORT`         | Fallback when `APP_PORT` is absent; final default is 3000          |
-| `FRONTEND_URL` | Optional frontend origin used by production CORS                   |
-
-The application factory normalizes environment values and calls `validateConfig`
-with its decorated configuration class before returning the configuration.
-Invalid environments or ports outside the integer range 0–65535 prevent startup.
+Configuration factories normalize environment values and call `validateConfig`
+with their decorated configuration classes before returning configuration.
+Invalid configuration must prevent application startup.
 Predefined process environment values take precedence over matching `.env` values.
-New configuration factories should reuse `validateConfig` for validation.
+Keep variable names, defaults, allowed values, and precedence rules in the owning
+configuration factory and `.env.example`, rather than duplicating them here.
 
-CORS uses credentials. Development and stage reflect the requesting origin.
-Production uses `FRONTEND_URL`; an absent or empty value disables CORS headers.
-Configure a frontend origin, not a page URL. CORS is browser policy, not
-authentication or server-side authorization.
+Configure CORS centrally during bootstrap using typed configuration. Treat allowed
+origins and credentials as transport policy; CORS does not replace authentication
+or server-side authorization.
 
 ## ESM, Imports, and Build Contracts
 
@@ -251,9 +238,8 @@ authentication or server-side authorization.
 
 ## Testing
 
-The primary focus is service behavior, business rules, and shared functions with
-independent logic. Tests protect meaningful behavior rather than repeat the
-implementation.
+The primary focus is service behavior and shared functions with independent
+logic. Tests protect observable behavior rather than repeat the implementation.
 
 ### Location
 
@@ -282,7 +268,10 @@ modules/example/
 - Test shared functions separately when they contain independent calculations,
   transformations, or rules.
 - Do not create separate repository tests.
-- Cover successful scenarios, boundary values, rule violations, and dependency
+- Do not create separate unit tests for configuration files, factories, or schemas.
+  Validate configuration during startup rather than adding tests that repeat its
+  declarations.
+- Cover successful scenarios, boundary values, invalid inputs, and dependency
   failures.
 - Simple delegation, getters, type declarations, and trivial wrappers do not
   require separate tests without a concrete regression risk.
@@ -330,8 +319,8 @@ explicit imports from `vitest`; test globals are not added to production types.
 `vitest.setup.ts` loads `reflect-metadata` before test modules execute.
 
 Library aliases in `tsconfig.json` use Vite's native tsconfig path resolution;
-`#package-json` uses the package `imports` field. Production still builds through Nest CLI; passing
-tests do not replace the production build.
+`#package-json` uses the package `imports` field. Production still builds through
+Nest CLI; passing tests do not replace the production build.
 
 Restore mocks and real timers after using them. The shared configuration enables
 `restoreMocks`; tests that enable fake timers must restore real timers in their
