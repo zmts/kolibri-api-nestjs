@@ -63,6 +63,15 @@ TypeScript configuration extending the root `tsconfig.json`.
   or register its provider again to bypass that ownership.
 - Extract code into a library when multiple consumers need the same stable
   responsibility. Similar shapes alone do not justify a shared abstraction.
+- Libraries and feature modules expose their public API through `index.ts`
+  when they have exports needed by external consumers. Export only the symbols
+  intended for use outside that boundary.
+- Consumers outside a library or feature module import through its public
+  entry point rather than reaching into internal files.
+- Within the same boundary, use direct local imports instead of importing
+  through its own `index.ts` to avoid circular dependencies.
+- An `index.ts` is not required in every nested directory. Add one only when
+  that directory has a public API to expose.
 
 ## Composition Root and Lifecycle
 
@@ -216,7 +225,7 @@ or server-side authorization.
 - Use `import type` for type-only dependencies. Nest-injected constructor tokens
   must remain available at runtime.
 - Use the configured `@libs/common`, `@libs/config`, and `@libs/core` aliases and
-  their explicit public exports. Internal library files use direct local imports.
+  their public entry points according to the dependency rules above.
 - `#package-json` is a native ESM alias declared in the root `package.json`
   `imports` field. Nest CLI assets copy that file to `dist/package.json` and
   watch it for changes. JSON value imports use `with { type: 'json' }`.
