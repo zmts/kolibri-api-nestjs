@@ -208,32 +208,45 @@ authentication or server-side authorization.
 - Preserve `type: module`, `module: ESNext`, `moduleResolution: Bundler`,
   decorator metadata, and strict TypeScript checking.
 - Relative TypeScript source imports and re-exports omit file extensions.
-  Rspack resolves these imports and produces ESM bundles for Node.js. Changing
-  TypeScript module resolution alone does not make extensionless imports work
-  in unbundled Node.js ESM output.
-- Nest CLI uses `builder: rspack` for the application and libraries. Its native
-  SWC loader preserves Nest decorator metadata, while
-  `fork-ts-checker-webpack-plugin` checks types during build and watch mode.
+  Nest CLI uses the SWC builder to compile `apps/` and `libs/` together,
+  excluding `*.spec.ts` files and `__tests__/` directories.
+- `npm run build` is the only build script. It runs `npm run typecheck`, clears
+  `dist`, and emits one JavaScript file per production TypeScript source with
+  the repository-relative directory structure. There are no separate
+  application/library npm builds or bundled output.
+- SWC resolves `@libs/*` aliases and adds `.js` extensions or `/index.js` to
+  output imports during compilation. No post-compilation path processing is
+  required. `.swcrc` sets the JavaScript target to ES2023; Nest CLI supplies
+  ESM output, decorator metadata, source maps, and full import resolution.
+- The application entry point is `dist/apps/api-main/src/main.js`; shared
+  library files are under `dist/libs/<library>/src`. Each source has one
+  compiled copy. The application TypeScript configuration extends the common
+  root build configuration so build and Nest start use the same output paths.
+- SWC does not check types. `npm run typecheck` uses `tsconfig.test.json` and
+  `tsc --noEmit` to check application, library, test, and Vitest configuration
+  types. Both `build` and `test` require this check to succeed before proceeding.
 - Use `import type` for type-only dependencies. Nest-injected constructor tokens
   must remain available at runtime.
 - Use the configured `@libs/common`, `@libs/config`, and `@libs/core` aliases and
   their explicit public exports. Internal library files use direct local imports.
-- `@package-json` points to the root `package.json`. Application compilation
-  enables `resolveJsonModule`. Rspack bundles the JSON value, so source imports
-  do not need runtime JSON import attributes.
-- Rspack resolves aliases from TypeScript configuration. Vitest resolves the same
-  paths through Vite's `resolve.tsconfigPaths`; do not duplicate alias definitions
-  in the test configuration.
-- Run the application with the existing Nest CLI start scripts or
-  `npm run start:prod`. The application bundle is `dist/apps/api-main/main.js`;
-  library bundles are `dist/libs/<library>/index.js`. Third-party packages remain
-  external dependencies and must be installed at runtime.
-- Library builds produce workspace bundles, not standalone npm packages or
-  declaration distributions. Keep libraries as workspace source dependencies;
-  a separately published library would require its own packaging contract.
-- Verify compilation, watch mode, and runtime together when changing aliases,
-  builders, or output paths. Do not switch production back to plain `tsc` emit
-  while retaining extensionless ESM imports.
+- `#package-json` is a native ESM alias declared in the root `package.json`
+  `imports` field. Nest CLI assets copy that file to `dist/package.json` and
+  watch it for changes. JSON value imports use `with { type: 'json' }`.
+  Keep this alias out of TypeScript `paths`: SWC rewrites JSON path aliases
+  with the JavaScript output extension.
+- Vitest resolves library aliases through Vite's `resolve.tsconfigPaths` and
+  the JSON alias through native package imports; do not duplicate mappings.
+- `npm run start:api-main` starts existing compiled output without rebuilding.
+  `start:dev:api-main` and `start:debug:api-main` use `tsc-watch` with
+  `tsconfig.test.json` and `--noEmit` to continuously check application, library,
+  test, and Vitest configuration types. Each check stops the previous server;
+  type errors are printed and prevent startup until corrected.
+- After a successful check, `tsc-watch` runs `nest start api-main` (with `--debug`
+  for debugging). Nest CLI performs a complete SWC build of `apps/` and `libs/`
+  and starts the server. Do not add `--watch` to this child command: `tsc-watch`
+  alone owns change detection and server restarts.
+- Verify compilation, watch mode, debug mode, and runtime together when changing
+  aliases, compiler configuration, or output paths.
 
 ## Testing
 
@@ -307,15 +320,16 @@ their combined registration and behavior.
 Run `npm test` from the workspace root. It first checks application, library,
 and test types using `tsconfig.test.json` without emitting files, then runs
 Vitest once. Both the application and test configuration use ESM. Vitest
-transforms test modules through Vite independently of the Rspack production build.
+transforms source test modules through Vite independently of the SWC
+production build.
 
 The root `vitest.config.ts` discovers `*.spec.ts` files inside `__tests__`
 directories under both `apps/` and `libs/`. Tests use the Node environment and
 explicit imports from `vitest`; test globals are not added to production types.
 `vitest.setup.ts` loads `reflect-metadata` before test modules execute.
 
-The aliases in `tsconfig.json`, including `@package-json`, use Vite's native
-tsconfig path resolution. Production still builds through Nest CLI; passing
+Library aliases in `tsconfig.json` use Vite's native tsconfig path resolution;
+`#package-json` uses the package `imports` field. Production still builds through Nest CLI; passing
 tests do not replace the production build.
 
 Restore mocks and real timers after using them. The shared configuration enables
@@ -324,9 +338,8 @@ cleanup. Service tests may use an in-memory `ConfigService` without loading
 `.env` or starting the application.
 
 The baseline checks remain `npm run build`, `npm run lint`, and
-`npm run format:check`. Library changes can also be checked with
-`npm run build:common`, `npm run build:config`, or `npm run build:core`.
-These checks do not replace behavior tests.
+`npm run format:check`. The common build checks application and library sources
+together. These checks do not replace behavior tests.
 
 ## Extension Criteria
 

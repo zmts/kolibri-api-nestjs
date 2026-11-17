@@ -8,22 +8,15 @@
     "node": ">=24"
   },
   "scripts": {
-    "build": "nest build",
-    "start": "nest start",
-    "start:dev": "nest start --watch",
-    "start:debug": "nest start --debug --watch",
-    "start:prod": "npm run start:api-main",
+    "build": "npm run typecheck && nest build",
+    "start:api-main": "node dist/apps/api-main/src/main.js",
+    "start:dev:api-main": "tsc-watch -p tsconfig.test.json --noEmit --onSuccess \"nest start api-main\"",
+    "start:debug:api-main": "tsc-watch -p tsconfig.test.json --noEmit --onSuccess \"nest start api-main --debug\"",
+    "typecheck": "tsc -p tsconfig.test.json --noEmit",
+    "test": "npm run typecheck && vitest run",
     "lint": "eslint \"apps/**/*.ts\" \"libs/**/*.ts\" --no-error-on-unmatched-pattern \"vitest*.ts\"",
-    "lint:fix": "npm run lint -- --fix",
     "format": "prettier --write \"apps/**/*.ts\" \"libs/**/*.ts\" --no-error-on-unmatched-pattern \"vitest*.ts\"",
-    "format:check": "prettier --check \"apps/**/*.ts\" \"apps/**/tsconfig*.json\" \"libs/**/*.ts\" \"libs/**/tsconfig*.json\" \"*.json\" eslint.config.mjs --no-error-on-unmatched-pattern \"vitest*.ts\"",
-    "build:api-main": "nest build api-main",
-    "start:api-main": "node dist/apps/api-main/main.js",
-    "start:dev:api-main": "nest start api-main --watch",
-    "build:common": "nest build common",
-    "build:config": "nest build config",
-    "build:core": "nest build core",
-    "test": "tsc -p tsconfig.test.json && vitest run"
+    "format:check": "prettier --check \"apps/**/*.ts\" \"apps/**/tsconfig*.json\" \"libs/**/*.ts\" \"libs/**/tsconfig*.json\" \"*.json\" eslint.config.mjs .swcrc --no-error-on-unmatched-pattern \"vitest*.ts\""
   },
   "dependencies": {
     "@nestjs/common": "12.5.0",
@@ -38,7 +31,8 @@
   "devDependencies": {
     "@nestjs/cli": "12.0.13",
     "@nestjs/schematics": "12.0.13",
-    "@rspack/core": "2.3.2",
+    "@swc/cli": "0.8.2",
+    "@swc/core": "1.16.22",
     "@types/express": "5.0.6",
     "@types/node": "24.19.2",
     "@typescript-eslint/eslint-plugin": "8.72.2",
@@ -48,12 +42,14 @@
     "eslint-plugin-import": "2.32.0",
     "eslint-plugin-prettier": "5.5.7",
     "eslint-plugin-unused-imports": "4.4.1",
-    "fork-ts-checker-webpack-plugin": "9.1.1",
     "globals": "17.14.0",
     "prettier": "3.10.1",
+    "tsc-watch": "7.2.1",
     "typescript": "6.0.3",
     "vite": "8.3.8",
-    "vitest": "5.1.0",
-    "webpack-node-externals": "3.0.0"
+    "vitest": "5.1.0"
+  },
+  "imports": {
+    "#package-json": "./package.json"
   }
 }

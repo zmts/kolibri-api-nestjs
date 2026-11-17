@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import packageJson from '@package-json';
 
+import packageJson from '#package-json' with { type: 'json' };
 import type { AllConfig } from '@libs/config';
 
 import type { StatusInfo } from './types/status-info.type';

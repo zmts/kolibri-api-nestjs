@@ -1,6 +1,6 @@
 # Kolibri API
 
-A minimal monorepo NestJS boilerplate using TypeScript and ESM, bundled with Rspack.
+A minimal monorepo NestJS boilerplate using TypeScript and ESM, compiled with SWC.
 
 ## Getting Started
 
@@ -9,7 +9,7 @@ Requires Node.js 24+.
 ```sh
 npm ci
 cp .env.example .env
-npm run start:dev
+npm run start:dev:api-main
 ```
 
 Application status: `GET http://localhost:3000/api/status`.
@@ -19,12 +19,13 @@ Production:
 
 ```sh
 npm run build
-npm run start:prod
+npm run start:api-main
 ```
 
 ## Checks
 
 ```sh
+npm run typecheck
 npm test
 npm run lint
 npm run format:check

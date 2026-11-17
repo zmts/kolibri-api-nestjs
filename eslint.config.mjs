@@ -41,7 +41,7 @@ export default [
       'unused-imports': unusedImports,
     },
     settings: {
-      'import/internal-regex': '^@(libs|apps)',
+      'import/internal-regex': '^(@(libs|apps)|#)',
     },
     rules: {
       'prettier/prettier': 'error',

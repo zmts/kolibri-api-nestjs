@@ -6,8 +6,22 @@
   "monorepo": true,
   "compilerOptions": {
     "deleteOutDir": true,
-    "tsConfigPath": "apps/api-main/tsconfig.app.json",
-    "builder": "rspack"
+    "tsConfigPath": "tsconfig.build.json",
+    "builder": {
+      "type": "swc",
+      "options": {
+        "filenames": ["apps", "libs"],
+        "extensions": [".ts"],
+        "ignore": ["**/*.spec.ts", "**/__tests__/**"]
+      }
+    },
+    "assets": [
+      {
+        "include": "../../../package.json",
+        "watchAssets": true,
+        "restartOnChange": true
+      }
+    ]
   },
   "projects": {
     "api-main": {
