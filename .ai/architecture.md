@@ -193,10 +193,11 @@ The application configuration currently uses:
 | `PORT`         | Fallback when `APP_PORT` is absent; final default is 3000          |
 | `FRONTEND_URL` | Optional frontend origin used by production CORS                   |
 
-The factory validates the environment and integer port range. Predefined
-process environment values take precedence over matching `.env` values.
-`validateConfig` is available for configuration classes requiring decorator-based
-validation; it is not automatically applied to every configuration factory.
+The application factory normalizes environment values and calls `validateConfig`
+with its decorated configuration class before returning the configuration.
+Invalid environments or ports outside the integer range 0–65535 prevent startup.
+Predefined process environment values take precedence over matching `.env` values.
+New configuration factories should reuse `validateConfig` for validation.
 
 CORS uses credentials. Development and stage reflect the requesting origin.
 Production uses `FRONTEND_URL`; an absent or empty value disables CORS headers.

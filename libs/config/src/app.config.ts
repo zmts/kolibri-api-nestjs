@@ -1,24 +1,35 @@
 import { registerAs } from '@nestjs/config';
+import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 import { AppEnv } from './config.type';
 import type { AppConfig } from './config.type';
+import { validateConfig } from './validate-config';
 
-export default registerAs<AppConfig>('app', () => {
-  const env = process.env.NODE_ENV ?? AppEnv.Dev;
-  const port = Number(process.env.APP_PORT ?? process.env.PORT ?? 3000);
+class AppConfigSchema implements AppConfig {
+  @IsString()
+  appName!: string;
 
-  if (!Object.values(AppEnv).includes(env as AppEnv)) {
-    throw new Error('NODE_ENV must be development, stage or production');
-  }
+  @IsEnum(AppEnv)
+  env!: AppEnv;
 
-  if (!Number.isInteger(port) || port < 0 || port > 65535) {
-    throw new Error('APP_PORT must be an integer between 0 and 65535');
-  }
+  @IsInt()
+  @Min(0)
+  @Max(65535)
+  port!: number;
 
-  return {
-    appName: process.env.APP_NAME || 'api',
-    env: env as AppEnv,
-    port,
-    frontendUrl: process.env.FRONTEND_URL,
-  };
-});
+  @IsOptional()
+  @IsString()
+  frontendUrl?: string;
+}
+
+export default registerAs<AppConfig>('app', () =>
+  validateConfig(
+    {
+      appName: process.env.APP_NAME || 'api',
+      env: process.env.NODE_ENV ?? AppEnv.Dev,
+      port: Number(process.env.APP_PORT ?? process.env.PORT ?? 3000),
+      frontendUrl: process.env.FRONTEND_URL,
+    },
+    AppConfigSchema,
+  ),
+);
